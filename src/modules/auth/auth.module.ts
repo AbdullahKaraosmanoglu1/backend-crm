@@ -1,25 +1,18 @@
+// src/modules/auth/auth.module.ts
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
-import { PassportModule } from '@nestjs/passport';
 import { AuthService } from './auth.service';
-import { JwtStrategy } from './jwt.strategy';
 import { AuthController } from './presentation/http/auth.controller';
 import { UsersModule } from '../users/users.module';
-import { PrismaModule } from '../../prisma/prisma.module';
-import { PasswordHasherService } from '../../shared/security/password-hasher.service'; // <-- ekle
-import { SharedModule } from '../../shared/shared.module';
+import { SecurityModule } from '../../shared/security/security.module'; // ⬅️ Jwt/JwtStrategy buradan
+import { SharedModule } from '../../shared/shared.module';              // ⬅️ PasswordHasherService buradan gelir
+
 @Module({
     imports: [
         UsersModule,
-        PrismaModule,
-        PassportModule,
+        SecurityModule,  // ⬅️ JwtModule + PassportModule + JwtStrategy burada
         SharedModule,
-        JwtModule.register({
-            secret: process.env.JWT_SECRET || 'dev_secret',
-            signOptions: { expiresIn: '1h' },
-        }),
     ],
-    providers: [AuthService, JwtStrategy],
+    providers: [AuthService],
     controllers: [AuthController],
     exports: [AuthService],
 })

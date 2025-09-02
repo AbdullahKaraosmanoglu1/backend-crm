@@ -1,26 +1,31 @@
-﻿// src/modules/users/infrastructure/persistence/user.prisma-repository.ts
-import { Injectable } from '@nestjs/common';
+﻿import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../prisma/prisma.service';
-import { IUserRepository } from '../../application/ports/user-repository.port';
+import { IUserRepository, FindAllParams } from '../../application/ports/user-repository.port';
 import { User as DomainUser } from '../../domain/entities/user.entity';
-
-// Domain <-> Prisma map yardımcıları
-function toDomain(prismaUser: any): DomainUser {
-  return new DomainUser(
-    prismaUser.id,
-    prismaUser.email,
-    prismaUser.passwordHash,      // <-- SIRA DÜZELTİLDİ
-    prismaUser.firstName ?? null,
-    prismaUser.lastName ?? null,
-  );
-}
 
 @Injectable()
 export class UserPrismaRepository implements IUserRepository {
   constructor(private readonly prisma: PrismaService) { }
 
+  private toDomain(r: any): DomainUser {
+    return new DomainUser(
+      r.id, r.email, r.passwordHash,
+      r.firstName, r.lastName,
+    );
+  }
+
+  async findById(id: string): Promise<DomainUser | null> {
+    const r = await this.prisma.user.findUnique({ where: { id } });
+    return r ? this.toDomain(r) : null;
+  }
+
+  async findByEmail(email: string): Promise<DomainUser | null> {
+    const r = await this.prisma.user.findUnique({ where: { email } });
+    return r ? this.toDomain(r) : null;
+  }
+
   async create(user: DomainUser): Promise<DomainUser> {
-    const created = await this.prisma.user.create({
+    const r = await this.prisma.user.create({
       data: {
         id: user.id,
         email: user.email,
@@ -29,16 +34,39 @@ export class UserPrismaRepository implements IUserRepository {
         lastName: user.lastName,
       },
     });
-    return toDomain(created);
+    return this.toDomain(r);
   }
 
-  async findById(id: string): Promise<DomainUser | null> {
-    const found = await this.prisma.user.findUnique({ where: { id } });
-    return found ? toDomain(found) : null;
+  async findAll(params: FindAllParams): Promise<DomainUser[]> {
+    const { search, skip = 0, take = 20 } = params;
+    const r = await this.prisma.user.findMany({
+      where: search
+        ? {
+          OR: [
+            { email: { contains: search, mode: 'insensitive' } },
+            { firstName: { contains: search, mode: 'insensitive' } },
+            { lastName: { contains: search, mode: 'insensitive' } },
+          ],
+        }
+        : undefined,
+      orderBy: { createdAt: 'desc' },
+      skip, take,
+    });
+    return r.map(this.toDomain);
   }
 
-  async findByEmail(email: string): Promise<DomainUser | null> {
-    const found = await this.prisma.user.findUnique({ where: { email } });
-    return found ? toDomain(found) : null;
+  async count(params: { search?: string }): Promise<number> {
+    const { search } = params;
+    return this.prisma.user.count({
+      where: search
+        ? {
+          OR: [
+            { email: { contains: search, mode: 'insensitive' } },
+            { firstName: { contains: search, mode: 'insensitive' } },
+            { lastName: { contains: search, mode: 'insensitive' } },
+          ],
+        }
+        : undefined,
+    });
   }
 }
