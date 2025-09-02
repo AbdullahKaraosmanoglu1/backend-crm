@@ -1,25 +1,22 @@
-// src/modules/shared/security/security.module.ts
-import { Global, Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
+import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
-@Global()
 @Module({
     imports: [
-        ConfigModule,
-        PassportModule,
+        ConfigModule.forRoot({ isGlobal: true }),
+        PassportModule.register({ defaultStrategy: 'jwt' }),
         JwtModule.registerAsync({
-            imports: [ConfigModule],
             inject: [ConfigService],
-            useFactory: (cfg: ConfigService) => ({
-                secret: cfg.get<string>('JWT_SECRET', ''), // fallback vermemek daha güvenli
-                signOptions: { expiresIn: '1h' },
+            useFactory: (cs: ConfigService) => ({
+                secret: cs.get<string>('JWT_SECRET')!,
+                signOptions: { expiresIn: cs.get<string>('JWT_EXPIRES_IN') ?? '1d' },
             }),
         }),
     ],
     providers: [JwtStrategy],
-    exports: [JwtModule, PassportModule],
+    exports: [PassportModule, JwtModule],
 })
 export class SecurityModule { }

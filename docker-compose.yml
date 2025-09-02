@@ -24,17 +24,18 @@ services:
     container_name: backend-crm-api
     ports:
       - "3000:3000"
+      - "9229:9229" # << debug port
     env_file:
       - .env
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
       - ./docker/entrypoint.sh:/usr/src/app/entrypoint.sh:ro
-
     depends_on:
       postgres:
         condition: service_healthy
     restart: unless-stopped
+    command: [ "/usr/src/app/entrypoint.sh" ] # emin olalım script çalışsın
 
   adminer:
     image: adminer
