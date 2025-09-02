@@ -1,0 +1,6 @@
+1-) Parola özeti API’den sızıyor (security bug)
+
+CreateUserHandler → repo.create bir domain User döndürüyor (içinde passwordHash var).
+
+UsersController.create() sonucu direkt döndürüyor. Aynı durum GetUser için de geçerli.
+⇒ İstemciye passwordHash gidiyor. Bu ciddi bir güvenlik açığı.
