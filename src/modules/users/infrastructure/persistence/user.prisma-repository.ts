@@ -1,4 +1,4 @@
-﻿// src/modules/users/infrastructure/persistence/user.prisma.repository.ts
+﻿// src/modules/users/infrastructure/persistence/user.prisma-repository.ts
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../prisma/prisma.service';
 import { IUserRepository } from '../../application/ports/user-repository.port';
@@ -9,12 +9,11 @@ function toDomain(prismaUser: any): DomainUser {
   return new DomainUser(
     prismaUser.id,
     prismaUser.email,
+    prismaUser.passwordHash,      // <-- SIRA DÜZELTİLDİ
     prismaUser.firstName ?? null,
     prismaUser.lastName ?? null,
-    prismaUser.passwordHash
   );
 }
-
 
 @Injectable()
 export class UserPrismaRepository implements IUserRepository {
@@ -23,11 +22,11 @@ export class UserPrismaRepository implements IUserRepository {
   async create(user: DomainUser): Promise<DomainUser> {
     const created = await this.prisma.user.create({
       data: {
-        id: user.id,                 // id’yi domain üretiyorsa
+        id: user.id,
         email: user.email,
+        passwordHash: user.passwordHash,
         firstName: user.firstName,
         lastName: user.lastName,
-        passwordHash: user.passwordHash,
       },
     });
     return toDomain(created);

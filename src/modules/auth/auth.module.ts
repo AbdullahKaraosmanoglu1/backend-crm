@@ -6,7 +6,7 @@ import { JwtStrategy } from './jwt.strategy';
 import { AuthController } from './presentation/http/auth.controller';
 import { UsersModule } from '../users/users.module';
 import { PrismaModule } from '../../prisma/prisma.module';
-
+import { PasswordHasherService } from '../../shared/security/password-hasher.service'; // <-- ekle
 @Module({
     imports: [
         UsersModule,
@@ -17,7 +17,7 @@ import { PrismaModule } from '../../prisma/prisma.module';
             signOptions: { expiresIn: '1h' },
         }),
     ],
-    providers: [AuthService, JwtStrategy],
+    providers: [AuthService, JwtStrategy, PasswordHasherService],
     controllers: [AuthController],
     exports: [AuthService],
 })

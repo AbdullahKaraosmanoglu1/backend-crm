@@ -1,7 +1,12 @@
-﻿import { Inject, Injectable } from '@nestjs/common';
+﻿// src/modules/users/application/handlers/queries/get-user.handler.ts
+import { Inject, Injectable } from '@nestjs/common';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { GetUserQuery } from 'application/handlers/queries/get-user.query';
-import type { IUserRepository } from '../../ports/user-repository.port'; // <-- type import
+
+// ✅ DOĞRU YOL
+import { GetUserQuery } from '../../queries/get-user.query';
+
+// ✅ TOKEN + type import
+import { USER_REPOSITORY, type IUserRepository } from '../../ports/user-repository.port';
 
 @Injectable()
 @QueryHandler(GetUserQuery)
